@@ -9,52 +9,57 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <pthread.h>
+#include <stdlib.h>
 
 #include "prog_bar.h"
 
-
+/* Flags to indicate if thread is runing */
 volatile uint8_t Thread1Runing = 1, Thread2Runing = 1, Thread3Runing = 1;
 
-/******************************************************************************/
-
+/**************************** Thread Functions ********************************/
 void *progress1(void *State)
 {
-	uint64_t *CurrState = (uint64_t *)State;
+	int64_t *CurrState = (int64_t *)State;
 	
-	for(uint64_t i = 0; i < 50000; i++)
+	for(int64_t i = 0; i < 50000; i++)
 	{
 		*CurrState = i;
-		usleep(1);
+		usleep(5);
 	}
 	Thread1Runing = 0;
+	pthread_exit(NULL);
+	return NULL;
 }
 
 void *progress2(void *State)
 {
-	uint64_t *CurrState = (uint64_t *)State;
+	int64_t *CurrState = (int64_t *)State;
 	
-	for(uint64_t i = 0; i < 10000; i++)
+	for(int64_t i = 0; i < 10000; i++)
 	{
 		*CurrState = i;
-		usleep(1);
+		usleep(8);
 	}
 	Thread2Runing = 0;
+	pthread_exit(NULL);
+	return NULL;
 }
 
 void *progress3(void *State)
 {
-	uint64_t *CurrState = (uint64_t *)State;
+	int64_t *CurrState = (int64_t *)State;
 	
-	for(uint64_t i = 0; i < 1000000; i++)
+	for(int64_t i = 0; i < 100000; i++)
 	{
 		*CurrState = i;
 		usleep(1);
 	}
 	Thread3Runing = 0;
+	pthread_exit(NULL);
+	return NULL;
 }
 
 /******************************************************************************/
-
 int main(void)
 {
 	/* 
@@ -66,32 +71,10 @@ int main(void)
 	bar_graph_t *Graph1, *Graph2, *Graph3;
 	
 	pthread_t ThreadID1, ThreadID2, ThreadID3;
-	uint64_t State1, State2, State3;
+	int64_t State1 = 0, State2 = 0, State3 = 0;
 	
-	Bar1 = init_bar(0, 50000-1, 50, 1);
-	Bar2 = init_bar(0, 10000-1, 50, 1);
-	Bar3 = init_bar(0, 100000-1, 50, 1);
-	
-	Graph1 = init_bar_graph('|', '#', ' ', '|');
-	Graph2 = init_bar_graph('|', '>', ' ', '|');
-	Graph3 = init_bar_graph('|', '=', ' ', '|');
-	
-	pthread_create(&ThreadID1, NULL, progress1, (void *)&State1);
-	pthread_create(&ThreadID2, NULL, progress2, (void *)&State2);
-	pthread_create(&ThreadID3, NULL, progress3, (void *)&State3);
-	
-	while(Thread1Runing || Thread2Runing || Thread3Runing)
-	{
-		#error "use triple progress bar method!"
-	}	
-	
-	destroy_bar(Bar1);
-	destroy_bar(Bar2);
-	destroy_bar(Bar3);
-	destroy_graph(Graph1);
-	destroy_graph(Graph2);
-	destroy_graph(Graph3);
-	
+	/*================ Drawing simple progress bar ===========================*/
+	printf("Drawing single progress bar...\n");
 	
 	/* First progress bar */
 	Bar1 = init_bar(0, 100000-1, 50, 1);
@@ -129,6 +112,39 @@ int main(void)
 	destroy_bar(Bar1);	
 	destroy_graph(Graph1);
 	
+	/*================= Drawing 3 progress bar at same time ==================*/
+	printf("Drawing 3 progress bar...\n");
+	Bar1 = init_bar(0, 50000-1, 50, 1);
+	Bar2 = init_bar(0, 10000-1, 50, 1);
+	Bar3 = init_bar(0, 100000-1, 50, 1);
 	
+	Graph1 = init_bar_graph('|', '#', ' ', '|');
+	Graph2 = init_bar_graph('|', '>', ' ', '|');
+	Graph3 = init_bar_graph('|', '=', ' ', '|');
+	
+	int th1 = pthread_create(&ThreadID1, NULL, progress1, (void *)&State1);
+	int th2 = pthread_create(&ThreadID2, NULL, progress2, (void *)&State2);
+	int th3 = pthread_create(&ThreadID3, NULL, progress3, (void *)&State3);
+	
+	if((th1 != 0) || (th2 != 0) || (th3 != 0))
+	{
+		printf("Error: Could not create all threads!");
+		exit(EXIT_FAILURE);
+	}
+	
+	while(Thread1Runing || Thread2Runing || Thread3Runing)
+	{
+		update_triple_bar(Bar1, Graph1, State1, Bar2, Graph2, State2, Bar3, Graph3, State3);
+		usleep(100000);
+	}
+	update_triple_bar(Bar1, Graph1, 50000-1, Bar2, Graph2, 10000-1, Bar3, Graph3, 100000-1);
+	
+	destroy_bar(Bar1);
+	destroy_bar(Bar2);
+	destroy_bar(Bar3);
+	destroy_graph(Graph1);
+	destroy_graph(Graph2);
+	destroy_graph(Graph3);
+		
 	return 0;
 }
