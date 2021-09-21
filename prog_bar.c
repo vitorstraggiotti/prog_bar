@@ -19,7 +19,8 @@
 #define BLUE_BG "104m"		/* Bright blue character background */
 #define RESET  "0m"			/* Reset foregroung and background colors */
 
-#define LINEUP2 "2F"		/* Moves cursor to beginning of the tird line up */
+#define LINEUP2 "2F"		/* Moves cursor to beginning of the second line up */
+#define LINEUP1 "1F"		/* Moves cursor to beginning of the first line up */
 
 /* Hold information for the correct dimensional representation */
 struct bar
@@ -286,8 +287,59 @@ void update_triple_bar(bar_t *Bar1, bar_graph_t *Graph1, int64_t CurrState1,
 		NotUpdateFlag = 1;
 	}
 }
+/******************************************************************************/
+void update_double_bar(bar_t *Bar1, bar_graph_t *Graph1, int64_t CurrState1,
+						bar_t *Bar2, bar_graph_t *Graph2, int64_t CurrState2)
+{
+	static uint8_t NotUpdateFlag = 0;
+	
+	if(NotUpdateFlag)
+		return;
 
+	uint8_t Bar1Position, Bar2Position;
+	float Percentage1, Percentage2;
+	
+	Bar1->CurrState = CurrState1;
+	Bar2->CurrState = CurrState2;
 
+	if((Bar1->CurrState >= Bar1->TargetState) || (Bar1->CurrState == Bar1->Max))
+	{
+		/* Update next target state to redraw progress bar */
+		if(Bar1->CurrState != Bar1->Max)
+			Bar1->TargetState += Bar1->SliceSize;
+		
+		/* Calculating bar position and percentage */		
+		Bar1Position = (uint8_t)((Bar1->BarSize * (Bar1->CurrState - Bar1->Min)) / (Bar1->Max - Bar1->Min));
+		Percentage1 = 100.0 * ((float)(Bar1->CurrState - Bar1->Min) / (float)(Bar1->Max - Bar1->Min));
+	}
+	
+	if((Bar2->CurrState >= Bar2->TargetState) || (Bar2->CurrState == Bar2->Max))
+	{
+		/* Update next target state to redraw progress bar */
+		if(Bar2->CurrState != Bar2->Max)
+			Bar2->TargetState += Bar2->SliceSize;
+		
+		/* Calculating bar position and percentage */		
+		Bar2Position = (uint8_t)((Bar2->BarSize * (Bar2->CurrState - Bar2->Min)) / (Bar2->Max - Bar2->Min));
+		Percentage2 = 100.0 * ((float)(Bar2->CurrState - Bar2->Min) / (float)(Bar2->Max - Bar2->Min));
+	}
+	
+	/* Draw triple progress bar */
+	drawing_bar(Graph1, Bar1->BarSize, Bar1Position, Percentage1, Bar1->Precision);
+	printf("\n");
+	drawing_bar(Graph2, Bar2->BarSize, Bar2Position, Percentage2, Bar2->Precision);
+	printf(ESC CSI LINEUP1);
+	
+	/* if is the last update, give one line space */
+	if((Bar1->CurrState == Bar1->Max) && (Bar2->CurrState == Bar2->Max))
+	{
+		drawing_bar(Graph1, Bar1->BarSize, Bar1Position, Percentage1, Bar1->Precision);
+		printf("\n");
+		drawing_bar(Graph2, Bar2->BarSize, Bar2Position, Percentage2, Bar2->Precision);
+		printf("\n\n");
+		NotUpdateFlag = 1;
+	}
+}
 
 
 

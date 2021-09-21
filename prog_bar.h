@@ -73,6 +73,15 @@ Method for updating the progress bar:
 void update_bar(bar_t *Bar, bar_graph_t *Graph, int64_t CurrState);
 
 /*
+Method for simultaneous updating 2 progress bar:
+	Bar --> The BAR object that have info on how to build the progress bar
+	Graph --> The GRAPHICAL object that have info on how to show the progress bar
+	CurrState --> Current state, between min and max, on computing loop
+*/
+void update_double_bar(bar_t *Bar1, bar_graph_t *Graph1, int64_t CurrState1,
+						bar_t *Bar2, bar_graph_t *Graph2, int64_t CurrState2);
+
+/*
 Method for simultaneous updating 3 progress bar:
 	Bar --> The BAR object that have info on how to build the progress bar
 	Graph --> The GRAPHICAL object that have info on how to show the progress bar

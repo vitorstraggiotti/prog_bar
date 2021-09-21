@@ -112,6 +112,35 @@ int main(void)
 	destroy_bar(Bar1);	
 	destroy_graph(Graph1);
 	
+	/*================= Drawing 2 progress bar at same time ==================*/
+	printf("Drawing 2 progress bar...\n");
+	Bar1 = init_bar(0, 50000-1, 50, 1);
+	Bar2 = init_bar(0, 10000-1, 50, 1);
+	
+	Graph1 = init_bar_graph('|', '@', ' ', '|');
+	Graph2 = init_bar_graph('|', '!', ' ', '|');
+	
+	int th1 = pthread_create(&ThreadID1, NULL, progress1, (void *)&State1);
+	int th2 = pthread_create(&ThreadID2, NULL, progress2, (void *)&State2);
+	
+	if((th1 != 0) || (th2 != 0))
+	{
+		printf("Error: Could not create all threads!");
+		exit(EXIT_FAILURE);
+	}
+	
+	while(Thread1Runing || Thread2Runing)
+	{
+		update_double_bar(Bar1, Graph1, State1, Bar2, Graph2, State2);
+		usleep(100000); /* 100ms */
+	}
+	update_double_bar(Bar1, Graph1, 50000-1, Bar2, Graph2, 10000-1);
+	
+	destroy_bar(Bar1);
+	destroy_bar(Bar2);
+	destroy_graph(Graph1);
+	destroy_graph(Graph2);
+	
 	/*================= Drawing 3 progress bar at same time ==================*/
 	printf("Drawing 3 progress bar...\n");
 	Bar1 = init_bar(0, 50000-1, 50, 1);
@@ -122,8 +151,8 @@ int main(void)
 	Graph2 = init_bar_graph('|', '>', ' ', '|');
 	Graph3 = init_bar_graph('|', '=', ' ', '|');
 	
-	int th1 = pthread_create(&ThreadID1, NULL, progress1, (void *)&State1);
-	int th2 = pthread_create(&ThreadID2, NULL, progress2, (void *)&State2);
+	th1 = pthread_create(&ThreadID1, NULL, progress1, (void *)&State1);
+	th2 = pthread_create(&ThreadID2, NULL, progress2, (void *)&State2);
 	int th3 = pthread_create(&ThreadID3, NULL, progress3, (void *)&State3);
 	
 	if((th1 != 0) || (th2 != 0) || (th3 != 0))
