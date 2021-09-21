@@ -10,34 +10,11 @@
 
 #include <stdint.h>
 
-/*
-Hold information on how to visually represent the progress bar:
-	DO NOT NEED TO BE ACCESSED DIRECTLY. USE THE METHODS!
-*/
-struct bar_graph
-{
-	char Start;
-	char FullBody;
-	char EmptyBody;
-	char Finish;
-};
+
+/* Hold information for the correct dimensional representation */
 typedef struct bar_graph bar_graph_t;
 
-/*
-Hold information for the correct dimensional representation
-	DO NOT NEED TO BE ACCESSED DIRECTLY. USE THE METHODS!
-*/
-struct bar
-{
-	int64_t CurrState;
-	int64_t TargetState;	/* Next target value for "CurrState" to update bar */
-	int64_t Min;
-	int64_t Max;
-	uint8_t BarSize;
-	uint8_t Precision;		/* >= 0 Number of decimal places on percentage */
-	uint64_t NumOfSlices;	/* 100.0/Precision */
-	uint64_t SliceSize;		/* [(Max-Min)/NumOfSlices] >= 1 */
-};
+/* Hold information on how to visually represent the progress bar */
 typedef struct bar bar_t;
 
 /*******************************************************************************
@@ -90,9 +67,20 @@ void show_info_bar(bar_t *Bar);
 /*
 Method for updating the progress bar:
 	Bar --> The BAR object that have info on how to build the progress bar
-	Graph -->
+	Graph --> The GRAPHICAL object that have info on how to show the progress bar
+	CurrState --> Current state, between min and max, on computing loop
 */
 void update_bar(bar_t *Bar, bar_graph_t *Graph, int64_t CurrState);
+
+/*
+Method for simultaneous updating 3 progress bar:
+	Bar --> The BAR object that have info on how to build the progress bar
+	Graph --> The GRAPHICAL object that have info on how to show the progress bar
+	CurrState --> Current state, between min and max, on computing loop
+*/
+void update_triple_bar(bar_t *Bar1, bar_graph_t *Graph1, int64_t CurrState1,
+						bar_t *Bar2, bar_graph_t *Graph2, int64_t CurrState2,
+						bar_t *Bar3, bar_graph_t *Graph3, int64_t CurrState3);
 
 #endif
 

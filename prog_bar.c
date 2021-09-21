@@ -18,6 +18,30 @@
 #define BLUE_BG "104m"		/* Bright blue character background */
 #define RESET  "0m"			/* Reset foregroung and background colors */
 
+/* Hold information for the correct dimensional representation */
+struct bar
+{
+	int64_t CurrState;
+	int64_t TargetState;	/* Next target value for "CurrState" to update bar */
+	int64_t Min;
+	int64_t Max;
+	uint8_t BarSize;
+	uint8_t Precision;		/* >= 0 Number of decimal places on percentage */
+	uint64_t NumOfSlices;	/* 100.0/Precision */
+	uint64_t SliceSize;		/* [(Max-Min)/NumOfSlices] >= 1 */
+};
+typedef struct bar bar_t;
+
+/* Hold information on how to visually represent the progress bar */
+struct bar_graph
+{
+	char Start;
+	char FullBody;
+	char EmptyBody;
+	char Finish;
+};
+typedef struct bar_graph bar_graph_t;
+
 
 /******************************************************************************/
 /* Constructor for the progress bar object */
@@ -117,7 +141,7 @@ void show_info_bar(bar_t *Bar)
 }
 /******************************************************************************/
 /* Helper function to draw the progress bar */
-static void drawing_class_A_bar(bar_graph_t *Graph, uint8_t BarSize,
+static void drawing_bar(bar_graph_t *Graph, uint8_t BarSize,
 								uint8_t BarPosition, float Percentage, uint8_t Precision)
 {
 	fputc('\r', stdout);
@@ -175,11 +199,65 @@ void update_bar(bar_t *Bar, bar_graph_t *Graph, int64_t CurrState)
 		Percentage = 100.0 * ((float)(Bar->CurrState - Bar->Min) / (float)(Bar->Max - Bar->Min));
 		
 		/* Draw progress bar */
-		drawing_class_A_bar(Graph, Bar->BarSize, BarPosition, Percentage, Bar->Precision);
+		drawing_bar(Graph, Bar->BarSize, BarPosition, Percentage, Bar->Precision);
 		
 		/* if is the last update, give one line space */
 		if(Bar->CurrState == Bar->Max)
 			printf("\n\n");
 	}
 }
+/******************************************************************************/
+void update_triple_bar(bar_t *Bar1, bar_graph_t *Graph1, int64_t CurrState1,
+						bar_t *Bar2, bar_graph_t *Graph2, int64_t CurrState2,
+						bar_t *Bar3, bar_graph_t *Graph3, int64_t CurrState3)
+{
+	uint8_t Bar1Position, Bar2Position, Bar3Position;
+	float Percentage1, Percentage2, Percentage3;
+	
+	Bar1->CurrState = CurrState1;
+	Bar2->CurrState = CurrState2;
+	Bar3->CurrState = CurrState3;
+
+	if((Bar1->CurrState >= Bar1->TargetState) || (Bar1->CurrState == Bar1->Max))
+	{
+		/* Update next target state to redraw progress bar */
+		if(Bar1->CurrState != Bar1->Max)
+			Bar1->TargetState += Bar1->SliceSize;
+		
+		/* Calculating bar position and percentage */		
+		Bar1Position = (uint8_t)((Bar1->BarSize * (Bar1->CurrState - Bar1->Min)) / (Bar1->Max - Bar1->Min));
+		Percentage1 = 100.0 * ((float)(Bar1->CurrState - Bar1->Min) / (float)(Bar1->Max - Bar1->Min));
+	}
+	
+	if((Bar2->CurrState >= Bar2->TargetState) || (Bar2->CurrState == Bar2->Max))
+	{
+		/* Update next target state to redraw progress bar */
+		if(Bar2->CurrState != Bar2->Max)
+			Bar2->TargetState += Bar2->SliceSize;
+		
+		/* Calculating bar position and percentage */		
+		Bar2Position = (uint8_t)((Bar2->BarSize * (Bar2->CurrState - Bar2->Min)) / (Bar2->Max - Bar2->Min));
+		Percentage2 = 100.0 * ((float)(Bar2->CurrState - Bar2->Min) / (float)(Bar2->Max - Bar2->Min));
+	}
+	
+	if((Bar3->CurrState >= Bar3->TargetState) || (Bar3->CurrState == Bar3->Max))
+	{
+		/* Update next target state to redraw progress bar */
+		if(Bar3->CurrState != Bar3->Max)
+			Bar3->TargetState += Bar3->SliceSize;
+		
+		/* Calculating bar position and percentage */		
+		Bar3Position = (uint8_t)((Bar3->BarSize * (Bar3->CurrState - Bar3->Min)) / (Bar3->Max - Bar3->Min));
+		Percentage3 = 100.0 * ((float)(Bar3->CurrState - Bar3->Min) / (float)(Bar3->Max - Bar3->Min));
+	}
+	
+	/* Draw triple progress bar */
+	#error "implement the triple progress bar!"
+}
+
+
+
+
+
+
 
