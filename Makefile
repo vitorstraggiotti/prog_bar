@@ -4,6 +4,7 @@ CC = gcc
 # Compiler flags for debug and release
 CFLAGS_DEB = -Wall -pedantic -c -g
 CFLAGS_REL = -Wall -pedantic -c -O2
+LIBFLAGS = -lpthread
 
 # Program name for debug and release
 PROG_NAME_DEB = test_debug
@@ -21,7 +22,7 @@ all:
 
 #  MAKE DEBUG VERSION
 $(PROG_NAME_DEB): test_deb.o prog_bar_deb.o
-	$(CC) -o $@ $^
+	$(CC) -o $@ $^ $(LIBFLAGS)
 
 test_deb.o: test.c
 	$(CC) $(CFLAGS_DEB) -o $@ $^
@@ -31,7 +32,7 @@ prog_bar_deb.o: prog_bar.c
 
 # MAKE RELEASE VERSION
 $(PROG_NAME_REL): test.o prog_bar.o
-	$(CC) -o $@ $^
+	$(CC) -o $@ $^ $(LIBFLAGS)
 
 test.o: test.c
 	$(CC) $(CFLAGS_REL) -o $@ $^
